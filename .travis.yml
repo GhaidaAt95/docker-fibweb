@@ -1,0 +1,30 @@
+sudo: required
+
+services: 
+  - docker
+  # Travis CI is going to automatically install a copy of docker into our little running conatiner
+
+before_install:
+  - docker build -t gja8672/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run gja8672/react-testnpm run test -- --coverage
+
+#Building prod versions of all projects
+after_success:
+  # Client
+  - docker build -t gja8672/multi-client ./client
+  # Server
+  - docker build -t gja8672/multi-server ./server  
+  # Worker
+  - docker build -t gja8672/multi-worker ./worker
+  # Nginx
+  - docker build -t gja8672/multi-nginx ./nginx
+
+  # Log In to docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #  Push to docker Hub
+  - docker push gja8672/multi-client
+  - docker push gja8672/multi-server
+  - docker push gja8672/multi-worker
+  - docker push gja8672/multi-nginx
